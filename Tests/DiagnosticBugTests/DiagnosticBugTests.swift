@@ -2,31 +2,40 @@ import DiagnosticBugMacros
 import MacroTesting
 import Testing
 
-@Suite(.macros([StringifyMacro.self]))
-struct StringifyMacroTests {
+@Suite(.macros([DiagnosticBugMacro.self], record: .failed))
+struct DiagnosticBugMacroTests {
     @Test
-    func stringify() {
+    func missingTypes() {
         assertMacro {
             """
-            #stringify(a + b)
+            @DiagnosticBug
+            struct Person {
+                var age = 10
+            }
+            """
+        } diagnostics: {
+            """
+            @DiagnosticBug
+            struct Person {
+                var age = 10
+                    ┬───────
+                    ╰─ ⚠️ Type should be defined explicitly.
+                       ✏️ Insert type annotation.
+            }
+            """
+        } fixes: {
+            """
+            @DiagnosticBug
+            struct Person {
+                var age :<#Type#>= 10
+            }
             """
         } expansion: {
             """
-            (a + b, "a + b")
+            struct Person {
+                var age :<#Type#>= 10
+            }
             """
-        }
-    }
-    
-    @Test
-    func stringifyLiteral() {
-        assertMacro {
-            #"""
-            #stringify("Hello, \(name)")
-            """#
-        } expansion: {
-            #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
-            """#
         }
     }
 }

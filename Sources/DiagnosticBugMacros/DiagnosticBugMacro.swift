@@ -1,33 +1,57 @@
-import SwiftCompilerPlugin
+import SwiftDiagnostics
 import SwiftSyntax
-import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-/// Implementation of the `stringify` macro, which takes an expression
-/// of any type and produces a tuple containing the value of that expression
-/// and the source code that produced the value. For example
-///
-///     #stringify(x + y)
-///
-///  will expand to
-///
-///     (x + y, "x + y")
-public struct StringifyMacro: ExpressionMacro {
+public struct DiagnosticBugMacro: MemberMacro {
     public static func expansion(
-        of node: some FreestandingMacroExpansionSyntax,
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
-    ) -> ExprSyntax {
-        guard let argument = node.arguments.first?.expression else {
-            fatalError("compiler bug: the macro does not have any arguments")
+    ) throws -> [DeclSyntax] {
+        _ = StructDeclSyntax(declaration)!.memberBlock.members.compactMap { $0.decl.as(VariableDeclSyntax.self) }.flatMap { decl in
+            decl.bindings
+                .filter { _ in true } // ⚠️ Comment this line out in order to get the expected behavior 🤯
+        }.map { binding -> () in
+            if binding.typeAnnotation?.type == nil {
+                let diag = Diagnostic(
+                    node: binding,
+                    message: SimpleDiagnosticMessage(
+                        message: "Type should be defined explicitly.",
+                        diagnosticID: .init(domain: "Init", id: "MissingTypeAnnotation"),
+                        severity: .warning
+                    ),
+                    fixIts: [
+                        FixIt(
+                            message: SimpleDiagnosticMessage(
+                                message: "Insert type annotation.",
+                                diagnosticID: .init(domain: "Init", id: "MissingTypeAnnotation"),
+                                severity: .warning
+                            ),
+                            changes: [
+                                FixIt.Change.replace(
+                                    oldNode: .init(binding),
+                                    newNode: .init(binding.with(\.typeAnnotation, .init(type: IdentifierTypeSyntax(name: .identifier("<#Type#>")))))
+                                )
+                            ]
+                        )
+                    ]
+                )
+                context.diagnose(diag)
+                return
+            }
+            return
         }
-
-        return "(\(argument), \(literal: argument.description))"
+        return []
     }
 }
 
-@main
-struct DiagnosticBugPlugin: CompilerPlugin {
-    let providingMacros: [Macro.Type] = [
-        StringifyMacro.self,
-    ]
+struct SimpleDiagnosticMessage: DiagnosticMessage, Error {
+    let message: String
+    let diagnosticID: MessageID
+    let severity: DiagnosticSeverity
+}
+
+extension SimpleDiagnosticMessage: FixItMessage {
+    var fixItID: MessageID { diagnosticID }
 }
