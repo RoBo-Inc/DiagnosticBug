@@ -12,6 +12,7 @@ public struct DiagnosticBugMacro: MemberMacro {
         _ = StructDeclSyntax(declaration)!.memberBlock.members.compactMap { $0.decl.as(VariableDeclSyntax.self) }.flatMap { decl in
             decl.bindings
                 .filter { _ in true } // ⚠️ Comment this line out in order to get the expected behavior 🤯
+            // as [PatternBindingSyntax] // ⚠️ or uncomment this one 😳
         }.map { binding -> () in
             if binding.typeAnnotation?.type == nil {
                 let diag = Diagnostic(

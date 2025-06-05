@@ -12,9 +12,9 @@ The warning appears only in the `Issue Navigator`, not in the `Editor` itself.
 
 You can run the macro at the executable module `DiagnosticBugClient`.
 
-## Fix
+## Fixes
 
-Please refer to the macro implementation, line #14.
+Please refer to the macro implementation, lines #14-15.
 
 ## Note
 
