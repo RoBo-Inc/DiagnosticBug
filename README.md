@@ -2,7 +2,7 @@
 
 ## Expected Behavior
 
-To see the expected behavior, please refer to the `UnitTests` section.
+The warning should appear in Editor right next to the place in the code that has the issue.
 
 ## Actual Behavior
 

@@ -20,7 +20,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.0-latest"),
-        .package(url: "https://github.com/pointfreeco/swift-macro-testing", from: "0.6.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -39,10 +38,5 @@ let package = Package(
 
         // A client of the library, which is able to use the macro in its own code.
         .executableTarget(name: "DiagnosticBugClient", dependencies: ["DiagnosticBug"]),
-        // Test target
-        .testTarget(name: "DiagnosticBugTests", dependencies: [
-            "DiagnosticBugMacros",
-            .product(name: "MacroTesting", package: "swift-macro-testing"),
-        ])
     ]
 )
